@@ -54,10 +54,7 @@ jobs:
     runs-on: windows-latest
     needs: [validate-inputs]
     outputs:
-      environment: ${{matrix.environment}}
-      namebuilder: ${{steps.matrixoutput.outputs.name_builder}}
-      namefleet: ${{steps.matrixoutput.outputs.name_fleet}}
-      namestack: ${{steps.matrixoutput.outputs.name_stack}}
+      data_run: ${{steps.matrixoutput.outputs.data_run}}
     strategy:
       max-parallel: 1
       matrix:
@@ -96,13 +93,19 @@ jobs:
             $NameStack = "$InstanceNameHeader-STACK"
 
             # Output Names
-            "name_builder=$NameBuilder" >> $env:GITHUB_OUTPUT
-            "name_fleet=$NameFleet" >> $env:GITHUB_OUTPUT
-            "name_stack=$NameStack" >> $env:GITHUB_OUTPUT
             "> [!IMPORTANT]" >> $env:GITHUB_STEP_SUMMARY
             "> Builder: ``$NameBuilder``" >> $env:GITHUB_STEP_SUMMARY
             "> Fleet: ``$NameFleet``" >> $env:GITHUB_STEP_SUMMARY
             "> Stack: ``$NameStack``" >> $env:GITHUB_STEP_SUMMARY
+
+            $DataRun = @{
+                environment = "$VarEnvironment"
+                namebuilder = "$NameBuilder"
+                namefleet = "$NameFleet"
+                namestack = "$NameStack"
+            }
+            $DataRunJson = $DataRun | ConvertTo-Json -Compress -Depth 5
+            "data_run=$DataRunJson" >> $env:GITHUB_OUTPUT
 
 
 
@@ -113,10 +116,10 @@ jobs:
     strategy:
       max-parallel: 2
       matrix:
-        environment: '${{needs.build-removelist.outputs.environment}}'
-        stackname: '${{needs.build-removelist.outputs.namestack}}'
-        fleetname: '${{needs.build-removelist.outputs.namefleet}}'
-        imagebuildername: '${{needs.build-removelist.outputs.namebuilder}}'
+        environment: '${{ fromJson(needs.build-removelist.outputs.data_run).environment }}'
+        stackname: '${{ fromJson(needs.build-removelist.outputs.data_run).namestack }}'
+        fleetname: '${{ fromJson(needs.build-removelist.outputs.data_run).namefleet }}'
+        imagebuildername: '${{ fromJson(needs.build-removelist.outputs.data_run).namebuilder }}'
     steps:
 
       - name: Checkout Repo
