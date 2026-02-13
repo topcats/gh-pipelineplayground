@@ -104,7 +104,7 @@ jobs:
                 namestack = "$NameStack"
             }
             $DataRunJson = $DataRun | ConvertTo-Json -Compress -Depth 5
-            if (!$DataRunJson.StartsWith("[")) { $DataRunJson = '[]'+$DataRunJson+']' }
+            if (!$DataRunJson.StartsWith("[")) { $DataRunJson = '['+$DataRunJson+']' }
             "data_run=$DataRunJson" >> $env:GITHUB_OUTPUT
 
             Write-Host $DataRunJson
