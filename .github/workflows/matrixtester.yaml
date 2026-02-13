@@ -39,7 +39,7 @@ jobs:
             "- Environments" >> $env:GITHUB_STEP_SUMMARY
             $EnvList = @()
             foreach ($env in $VarEnvironments.Split(',')) {
-                "- ``$env``" >> $env:GITHUB_STEP_SUMMARY
+                "  - ``$env``" >> $env:GITHUB_STEP_SUMMARY
                 $EnvList += $env
             }
 
@@ -80,12 +80,12 @@ jobs:
             $WorkspacePath = '${{github.workspace}}'
             $VarRegion = '${{vars.AWS_REGION}}'
             $VarEnvironment = '${{matrix.environment}}'
-            $InstanceHeader = '${{vars.var1}}'
+            $InstanceNameHeader = '${{vars.var1}}'
 
             "### Produce Matrix" >> $env:GITHUB_STEP_SUMMARY
             "- AWS Region: ``$VarRegion``" >> $env:GITHUB_STEP_SUMMARY
             "- Environment: ``$VarEnvironment``" >> $env:GITHUB_STEP_SUMMARY
-            "- InstanceHeader: ``$InstanceHeader``" >> $env:GITHUB_STEP_SUMMARY
+            "- InstanceHeader: ``$InstanceNameHeader``" >> $env:GITHUB_STEP_SUMMARY
 
 
             # Produce full names
@@ -113,10 +113,10 @@ jobs:
     strategy:
       max-parallel: 2
       matrix:
-        environment: ${{needs.build-removelist.outputs.environment}}
-        stackname: ${{needs.build-removelist.outputs.namestack}}
-        fleetname: ${{needs.build-removelist.outputs.namefleet}}
-        imagebuildername: ${{needs.build-removelist.outputs.namebuilder}}
+        environment: '${{needs.build-removelist.outputs.environment}}'
+        stackname: '${{needs.build-removelist.outputs.namestack}}'
+        fleetname: '${{needs.build-removelist.outputs.namefleet}}'
+        imagebuildername: '${{needs.build-removelist.outputs.namebuilder}}'
     steps:
 
       - name: Checkout Repo
