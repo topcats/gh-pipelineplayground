@@ -1,0 +1,173 @@
+name: "Workflow Testing: Matrix Cascade"
+
+
+on:
+  workflow_dispatch:
+
+
+env:
+  environments_to_process: "env1,env2"
+
+
+jobs:
+  validate-inputs:
+    name: "Validate Inputs"
+    runs-on: windows-latest
+    outputs:
+      environments: ${{steps.jobdetails.outputs.environments}}
+    steps:
+
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+        with:
+          clean: true
+          fetch-tags: true
+
+      - name: Job Details
+        shell: pwsh
+        id: jobdetails
+        run: |
+            # Grab Input variables into powershell
+            $VarRegion = '${{vars.AWS_REGION}}'
+            $VarEnvironments = '${{env.environments_to_process}}'
+
+            "## Workflow Testing" >> $env:GITHUB_STEP_SUMMARY
+            "### Job Details - Refresh Builder" >> $env:GITHUB_STEP_SUMMARY
+            "- AWS Region: ``$VarRegion``" >> $env:GITHUB_STEP_SUMMARY
+
+            # Build and Output Environments list
+            "- Environments" >> $env:GITHUB_STEP_SUMMARY
+            $EnvList = @()
+            foreach ($env in $VarEnvironments.Split(',')) {
+                "- ``$env``" >> $env:GITHUB_STEP_SUMMARY
+                $EnvList += $env
+            }
+
+            # Convert Environment list to JSON and set as output
+            $EnvListJson = $EnvList | ConvertTo-Json -Compress -Depth 5
+            "environments=$EnvListJson" >> $env:GITHUB_OUTPUT
+
+
+
+  build-removelist:
+    name: "Build Next List"
+    runs-on: windows-latest
+    needs: [validate-inputs]
+    outputs:
+      environment: ${{matrix.environment}}
+      namebuilder: ${{steps.matrixoutput.outputs.name_builder}}
+      namefleet: ${{steps.matrixoutput.outputs.name_fleet}}
+      namestack: ${{steps.matrixoutput.outputs.name_stack}}
+    strategy:
+      max-parallel: 1
+      matrix:
+        environment: ${{ fromJson(needs.validate-inputs.outputs.environments) }}
+    environment: ${{matrix.environment}}
+
+    steps:
+
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+        with:
+          clean: true
+          fetch-tags: true
+
+      - name: Produce Matrix
+        shell: pwsh
+        id: matrixoutput
+        run: |
+            # Grab Input variables into powershell
+            $WorkspacePath = '${{github.workspace}}'
+            $VarRegion = '${{vars.AWS_REGION}}'
+            $VarEnvironment = '${{matrix.environment}}'
+            $InstanceHeader = '${{vars.var1}}'
+
+            "### Produce Matrix" >> $env:GITHUB_STEP_SUMMARY
+            "- AWS Region: ``$VarRegion``" >> $env:GITHUB_STEP_SUMMARY
+            "- Environment: ``$VarEnvironment``" >> $env:GITHUB_STEP_SUMMARY
+            "- InstanceHeader: ``$InstanceHeader``" >> $env:GITHUB_STEP_SUMMARY
+
+
+            # Produce full names
+            $InstanceNameHeader = "$InstanceNameHeader-TEST"
+            $InstanceNameHeader = $InstanceNameHeader.ToUpper().Replace(' ', '')
+            $NameBuilder = "$InstanceNameHeader-IB"
+            $NameFleet = "$InstanceNameHeader-FLEET"
+            $NameStack = "$InstanceNameHeader-STACK"
+
+            # Output Names
+            "name_builder=$NameBuilder" >> $env:GITHUB_OUTPUT
+            "name_fleet=$NameFleet" >> $env:GITHUB_OUTPUT
+            "name_stack=$NameStack" >> $env:GITHUB_OUTPUT
+            "> [!IMPORTANT]" >> $env:GITHUB_STEP_SUMMARY
+            "> Builder: ``$NameBuilder``" >> $env:GITHUB_STEP_SUMMARY
+            "> Fleet: ``$NameFleet``" >> $env:GITHUB_STEP_SUMMARY
+            "> Stack: ``$NameStack``" >> $env:GITHUB_STEP_SUMMARY
+
+
+
+  appstream-removal:
+    name: "Appstream: Removal"
+    needs: [build-removelist]
+    runs-on: windows-latest
+    strategy:
+      max-parallel: 2
+      matrix:
+        environment: ${{needs.build-removelist.outputs.environment}}
+        stackname: ${{needs.build-removelist.outputs.namestack}}
+        fleetname: ${{needs.build-removelist.outputs.namefleet}}
+        imagebuildername: ${{needs.build-removelist.outputs.namebuilder}}
+    steps:
+
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+        with:
+          clean: true
+          fetch-tags: true
+
+      - name: Remove Job Details
+        shell: pwsh
+        run: |
+            # Grab Input variables into powershell
+            $WorkspacePath = '${{github.workspace}}'
+            $VarRegion = '${{vars.AWS_REGION}}'
+            $VarEnvironment = '${{matrix.environment}}'
+            $VarStackName = '${{matrix.stackname}}'
+            $VarFleetName = '${{matrix.fleetname}}'
+            $VarImagebuilderName = '${{matrix.imagebuildername}}'
+
+            "### Remove Job Details" >> $env:GITHUB_STEP_SUMMARY
+            "- AWS Region: ``$VarRegion``" >> $env:GITHUB_STEP_SUMMARY
+            "- Environment: ``$VarEnvironment``" >> $env:GITHUB_STEP_SUMMARY
+            "- Stack: ``$VarStackName``" >> $env:GITHUB_STEP_SUMMARY
+            "- Fleet: ``$VarFleetName``" >> $env:GITHUB_STEP_SUMMARY
+            "- Builder: ``$VarImagebuilderName``" >> $env:GITHUB_STEP_SUMMARY
+
+
+
+  build-appstream:
+    name: "Build Appstream"
+    needs: [validate-inputs, appstream-removal]
+    runs-on: windows-latest
+    strategy:
+      max-parallel: 2
+      matrix:
+        environment: ${{ fromJson(needs.validate-inputs.outputs.environments) }}
+    steps:
+
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+        with:
+          clean: true
+          fetch-tags: true
+
+      - name: Build Job Details
+        shell: pwsh
+        run: |
+            # Grab Input variables into powershell
+            $WorkspacePath = '${{github.workspace}}'
+            $VarEnvironment = '${{matrix.environment}}'
+
+            "### Build Job Details" >> $env:GITHUB_STEP_SUMMARY
+            "- Workspace: ``$WorkspacePath``" >> $env:GITHUB_STEP_SUMMARY
+            "- Environment: ``$VarEnvironment``" >> $env:GITHUB_STEP_SUMMARY
