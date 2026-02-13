@@ -114,12 +114,8 @@ jobs:
     needs: [build-removelist]
     runs-on: windows-latest
     strategy:
-      max-parallel: 2
       matrix:
-        environment: '${{ fromJson(needs.build-removelist.outputs.data_run).environment }}'
-        stackname: '${{ fromJson(needs.build-removelist.outputs.data_run).namestack }}'
-        fleetname: '${{ fromJson(needs.build-removelist.outputs.data_run).namefleet }}'
-        imagebuildername: '${{ fromJson(needs.build-removelist.outputs.data_run).namebuilder }}'
+        data_run: '${{ fromJson(needs.build-removelist.outputs.data_run) }}'
     steps:
 
       - name: Checkout Repo
@@ -134,10 +130,10 @@ jobs:
             # Grab Input variables into powershell
             $WorkspacePath = '${{github.workspace}}'
             $VarRegion = '${{vars.AWS_REGION}}'
-            $VarEnvironment = '${{matrix.environment}}'
-            $VarStackName = '${{matrix.stackname}}'
-            $VarFleetName = '${{matrix.fleetname}}'
-            $VarImagebuilderName = '${{matrix.imagebuildername}}'
+            $VarEnvironment = '${{ fromJson(matrix.data_run).environment }}'
+            $VarStackName = '${{ fromJson(matrix.data_run).stackname }}'
+            $VarFleetName = '${{ fromJson(matrix.data_run).fleetname }}'
+            $VarImagebuilderName = '${{ fromJson(matrix.data_run).imagebuildername }}'
 
             "### Remove Job Details" >> $env:GITHUB_STEP_SUMMARY
             "- AWS Region: ``$VarRegion``" >> $env:GITHUB_STEP_SUMMARY
