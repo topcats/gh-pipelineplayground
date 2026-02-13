@@ -84,7 +84,6 @@ jobs:
             "- Environment: ``$VarEnvironment``" >> $env:GITHUB_STEP_SUMMARY
             "- InstanceHeader: ``$InstanceNameHeader``" >> $env:GITHUB_STEP_SUMMARY
 
-
             # Produce full names
             $InstanceNameHeader = "$InstanceNameHeader-TEST"
             $InstanceNameHeader = $InstanceNameHeader.ToUpper().Replace(' ', '')
@@ -107,6 +106,9 @@ jobs:
             $DataRunJson = $DataRun | ConvertTo-Json -Compress -Depth 5
             if (!$DataRunJson.StartsWith("[")) { $DataRunJson = '[]'+$DataRunJson+']' }
             "data_run=$DataRunJson" >> $env:GITHUB_OUTPUT
+
+            Write-Host $DataRunJson
+
 
 
 
@@ -131,10 +133,10 @@ jobs:
             # Grab Input variables into powershell
             $WorkspacePath = '${{github.workspace}}'
             $VarRegion = '${{vars.AWS_REGION}}'
-            $VarEnvironment = '${{ fromJson(matrix.data_run).environment }}'
-            $VarStackName = '${{ fromJson(matrix.data_run).stackname }}'
-            $VarFleetName = '${{ fromJson(matrix.data_run).fleetname }}'
-            $VarImagebuilderName = '${{ fromJson(matrix.data_run).imagebuildername }}'
+            $VarEnvironment = '${{ matrix.data_run.environment }}'
+            $VarStackName = '${{ matrix.data_run.stackname }}'
+            $VarFleetName = '${{ matrix.data_run.fleetname }}'
+            $VarImagebuilderName = '${{ matrix.data_run.imagebuildername }}'
 
             "### Remove Job Details" >> $env:GITHUB_STEP_SUMMARY
             "- AWS Region: ``$VarRegion``" >> $env:GITHUB_STEP_SUMMARY
