@@ -36,18 +36,6 @@ jobs:
             "- VarInput: ``$VarInput ``" >> $env:GITHUB_STEP_SUMMARY
             "- fired how: ${{github.event_name}}"
 
-            # Build and Output Environments list
-            "- Environments" >> $env:GITHUB_STEP_SUMMARY
-            $EnvList = @()
-            foreach ($env in $VarEnvironments.Split(',')) {
-                "  - ``$env``" >> $env:GITHUB_STEP_SUMMARY
-                $EnvList += $env
-            }
-
-            # Convert Environment list to JSON and set as output
-            $EnvListJson = $EnvList | ConvertTo-Json -Compress -Depth 5
-            "environments=$EnvListJson" >> $env:GITHUB_OUTPUT
-
 
       - name: Check Confirmed
         shell: pwsh
