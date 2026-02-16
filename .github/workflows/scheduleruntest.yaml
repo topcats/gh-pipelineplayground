@@ -1,16 +1,23 @@
 name: "Workflow Testing: Automatic schedule"
 
 
-
 on:
   schedule:
-    - cron: '22 12 * * 1'
+    - cron: '40 12 * * 1'
   workflow_dispatch:
     inputs:
+      whattodo:
+        description: 'What to Do'
+        type: string
       dosomething:
         description: 'Rahs Rah Rah'
         type: boolean
         required: true
+  workflow_call:
+    inputs:
+      whattodo:
+        type: string
+
 
 jobs:
   testing:
@@ -30,10 +37,12 @@ jobs:
         run: |
             # Grab Input variables into powershell
             $VarInput = '${{inputs.dosomething}}'
+            $VarInputWhat = '${{inputs.whattodo}}'
 
             "## Workflow Testing" >> $env:GITHUB_STEP_SUMMARY
             "### Schedule Run Automatic Inputs" >> $env:GITHUB_STEP_SUMMARY
-            "- VarInput: ``$VarInput ``" >> $env:GITHUB_STEP_SUMMARY
+            "- VarInput: ``$VarInput``" >> $env:GITHUB_STEP_SUMMARY
+            "- VarInputWhat: ``$VarInputWhat``" >> $env:GITHUB_STEP_SUMMARY
             "- fired how: ${{github.event_name}}"
 
 

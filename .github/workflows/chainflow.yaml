@@ -1,0 +1,35 @@
+name: "Workflow Testing: Chain Flow without confirm"
+
+
+on:
+  schedule:
+    - cron: '45 12 * * 1'
+  workflow_dispatch:
+
+
+jobs:
+  testing-master:
+    name: "Testing Master"
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+        with:
+          clean: true
+          fetch-tags: true
+
+      - name: Job Details
+        shell: pwsh
+        id: jobdetails
+        run: |
+            "## Workflow Testing" >> $env:GITHUB_STEP_SUMMARY
+            "### Workflow Chaining" >> $env:GITHUB_STEP_SUMMARY
+            "- fired how: ${{github.event_name}}" >> $env:GITHUB_STEP_SUMMARY
+
+  testing-subflow:
+    name: "subflow"
+    needs: [testing-master]
+    uses: ./.github/workflows/scheduleruntest.yaml
+    secrets: inherit
+    with:
+      whattodo: 'banana'
