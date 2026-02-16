@@ -44,7 +44,7 @@ jobs:
 
             "## Workflow Testing" >> $env:GITHUB_STEP_SUMMARY
             "### Schedule Run Automatic Inputs" >> $env:GITHUB_STEP_SUMMARY
-            "- VarInput: ``$VarInput``" >> $env:GITHUB_STEP_Test FSUMMARY
+            "- VarInput: ``$VarInput``" >> $env:GITHUB_STEP_SUMMARY
             "- VarInputWhat: ``$VarInputWhat``" >> $env:GITHUB_STEP_SUMMARY
             "- fired how: ${{github.event_name}}" >> $env:GITHUB_STEP_SUMMARY
 
