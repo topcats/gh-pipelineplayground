@@ -3,7 +3,7 @@ name: "Workflow Testing: Automatic schedule"
 
 on:
   schedule:
-    - cron: '40 12 * * 1'
+    - cron: '15 14 * * *'
   workflow_dispatch:
     inputs:
       whattodo:
@@ -17,6 +17,9 @@ on:
     inputs:
       whattodo:
         type: string
+      dosomething:
+        type: boolean
+        required: true
 
 
 jobs:
@@ -41,9 +44,9 @@ jobs:
 
             "## Workflow Testing" >> $env:GITHUB_STEP_SUMMARY
             "### Schedule Run Automatic Inputs" >> $env:GITHUB_STEP_SUMMARY
-            "- VarInput: ``$VarInput``" >> $env:GITHUB_STEP_SUMMARY
+            "- VarInput: ``$VarInput``" >> $env:GITHUB_STEP_Test FSUMMARY
             "- VarInputWhat: ``$VarInputWhat``" >> $env:GITHUB_STEP_SUMMARY
-            "- fired how: ${{github.event_name}}"
+            "- fired how: ${{github.event_name}}" >> $env:GITHUB_STEP_SUMMARY
 
 
       - name: Check Confirmed

@@ -3,7 +3,7 @@ name: "Workflow Testing: Chain Flow without confirm"
 
 on:
   schedule:
-    - cron: '45 12 * * 1'
+    - cron: '05 14 * * *'
   workflow_dispatch:
 
 
@@ -33,3 +33,4 @@ jobs:
     secrets: inherit
     with:
       whattodo: 'banana'
+      dosomething: true
