@@ -1,0 +1,115 @@
+name: "Testing: Build Output - Release"
+run-name: "Testing: Build Output - Release - ${{github.run_number}}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_change:
+        description: 'Version Increment Method'
+        required: true
+        type: choice
+        default: 'Build'
+        options:
+          - Major
+          - Minor
+          - Build
+          - Manual
+      version_explicit:
+        description: 'Explicit Version (w.x.y.z)'
+        required: false
+        type: string
+      perform_job:
+        description: 'Confirm you want to Build!'
+        required: true
+        type: boolean
+
+
+env:
+  CI                    : "false"
+  BuildRefName          : '${{github.ref_name}}'
+  BuildNewVersion       : ''
+  BuildNewVersionInfo   : ''
+  ChangeFile            : './testproject/changemydate.txt'
+
+
+permissions:
+  contents: write
+
+
+jobs:
+  build-release:
+    name: "Build Release"
+    runs-on: windows-latest
+    steps:
+      - name: Summary
+        shell: pwsh
+        run: |
+            "## Workflow Testing" >> $env:GITHUB_STEP_SUMMARY
+            "### Build Output - Release" >> $env:GITHUB_STEP_SUMMARY
+            "- Branch: ``${{github.ref_name}}``" >> $env:GITHUB_STEP_SUMMARY
+            "- Raised by: ``${{github.actor}}``" >> $env:GITHUB_STEP_SUMMARY
+            "- Version Change: ``${{inputs.version_change}}``" >> $env:GITHUB_STEP_SUMMARY
+            "- Version Explicit: ``${{inputs.version_explicit}}``" >> $env:GITHUB_STEP_SUMMARY
+
+
+      # 1) Check-out repository under $GITHUB_WORKSPACE
+      - name: Checkout Repo
+        uses: actions/checkout@v6
+        with:
+          clean: true
+          fetch-tags: true
+
+
+      # 2.2) Fix tag name if has a forward slash
+      - name: Make Change
+        shell: pwsh
+        run: |
+            # Grab Input variables into powershell
+            $Workspace: '${{github.workspace}}'
+            $Filenane = '${{env.BuildRefName}}'
+            
+            $Filenane = Join-Path -Path $Workspace -ChildPath $Filenane
+
+            Write-Host "Original Ref Name: $Filenane"
+            Write-Host "Now: $(Get-Date)"
+            Get-Date | Out-File -FilePath $Filenane -Force
+            
+ 
+      - name: Version Tag
+        shell: pwsh
+        run: |
+            # Grab Input variables into powershell
+            $BuildRefNameNew = '${{env.BuildRefName}}'
+            $VersionChange = '${{inputs.version_change}}'
+            $VersionExp = '${{inputs.version_explicit}}'
+            $BuildNewVersionNew = $VersionExp
+
+            if($BuildRefNameNew.Contains("/")) {$BuildRefNameNew = $BuildRefNameNew.Replace("/", "-")}
+            $BuildNewVersionInfoNew = "V$BuildNewVersionNew"
+
+            "BuildRefName=$BuildRefNameNew" >> $env:GITHUB_ENV
+            "BuildNewVersion=$BuildNewVersionNew" >> $env:GITHUB_ENV
+            "BuildNewVersionInfo=$BuildNewVersionInfoNew" >> $env:GITHUB_ENV
+
+            Write-Host "Version Tag: $BuildNewVersionInfoNew"
+            "- Version Tag: ``$BuildNewVersionInfoNew`` :rocket:" >> $env:GITHUB_STEP_SUMMARY
+
+            
+      - name: Save new Version
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+            git config --global user.email "${{github.actor_id}}+${{github.actor}}@users.noreply.github.com"
+            git config --global user.name "GitHub Action"
+            git add --ignore-errors textproject/*.txt
+            git commit -m "Release Build ${{env.BuildNewVersionInfo}} [skip ci]"
+            git tag -a "${{env.BuildNewVersionInfo}}" -m "Release Build"
+            git push origin
+            git push --tags origin
+
+
+      - name: Release Information
+        shell: pwsh
+        run: |
+            "> [!TIP] `n> All Done" >> $env:GITHUB_STEP_SUMMARY
