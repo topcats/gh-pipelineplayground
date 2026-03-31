@@ -60,12 +60,11 @@ jobs:
           fetch-tags: true
 
 
-      # 2.2) Fix tag name if has a forward slash
       - name: Make Change
         shell: pwsh
         run: |
             # Grab Input variables into powershell
-            $Workspace: '${{github.workspace}}'
+            $Workspace = '${{github.workspace}}'
             $Filenane = '${{env.BuildRefName}}'
             
             $Filenane = Join-Path -Path $Workspace -ChildPath $Filenane
