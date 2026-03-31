@@ -51,6 +51,12 @@ jobs:
             "- Version Change: ``${{inputs.version_change}}``" >> $env:GITHUB_STEP_SUMMARY
             "- Version Explicit: ``${{inputs.version_explicit}}``" >> $env:GITHUB_STEP_SUMMARY
 
+      - name: Create GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ vars.THEOWLS_RELEASE_BOT_ID }}
+          private-key: ${{ secrets.THEOWLS_RELEASE_BOT_PK }}
 
       # 1) Check-out repository under $GITHUB_WORKSPACE
       - name: Checkout Repo
@@ -58,6 +64,7 @@ jobs:
         with:
           clean: true
           fetch-tags: true
+          token: ${{ steps.app-token.outputs.token }}
 
 
       - name: Make Change
@@ -96,11 +103,9 @@ jobs:
             
       - name: Save new Version
         shell: pwsh
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-            git config --global user.email "${{github.actor_id}}+${{github.actor}}@users.noreply.github.com"
-            git config --global user.name "GitHub Action"
+            git config user.name "theowls-release-bot[bot]"
+            git config user.email "theowls-release-bot[bot]@users.noreply.github.com"
             git add --ignore-errors testproject/*.txt
             git commit -m "Release Build ${{env.BuildNewVersionInfo}} [skip ci]"
             git tag -a "${{env.BuildNewVersionInfo}}" -m "Release Build"
