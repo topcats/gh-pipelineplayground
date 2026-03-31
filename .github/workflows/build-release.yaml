@@ -65,7 +65,7 @@ jobs:
         run: |
             # Grab Input variables into powershell
             $Workspace = '${{github.workspace}}'
-            $Filenane = '${{env.BuildRefName}}'
+            $Filenane = '${{env.ChangeFile}}'
             
             $Filenane = Join-Path -Path $Workspace -ChildPath $Filenane
 
