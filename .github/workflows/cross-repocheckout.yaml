@@ -1,0 +1,72 @@
+name: "Testing: Cross Repo Checkout"
+run-name: "Testing: Cross Repo Checkout - ${{github.run_number}}"
+
+on:
+  workflow_dispatch:
+
+
+env:
+  CI                    : "false"
+  BuildRefName          : '${{github.ref_name}}'
+
+
+permissions:
+  contents: write
+
+
+jobs:
+  job-test:
+    name: "Test Job"
+    runs-on: windows-latest
+    steps:
+      - name: Summary
+        shell: pwsh
+        run: |
+            "## Workflow Testing" >> $env:GITHUB_STEP_SUMMARY
+            "### Cross Repo Checkout" >> $env:GITHUB_STEP_SUMMARY
+            "- Branch: ``${{github.ref_name}}``" >> $env:GITHUB_STEP_SUMMARY
+            "- Raised by: ``${{github.actor}}``" >> $env:GITHUB_STEP_SUMMARY
+
+      - name: Create GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ vars.THEOWLS_RELEASE_BOT_ID }}
+          private-key: ${{ secrets.THEOWLS_RELEASE_BOT_PK }}
+
+      # 1) Check-out repository under $GITHUB_WORKSPACE
+      - name: Checkout Repo
+        uses: actions/checkout@v6
+        with:
+          clean: true
+          fetch-tags: true
+          token: ${{ steps.app-token.outputs.token }}
+
+          # 1) Check-out repository under $GITHUB_WORKSPACE
+      - name: Checkout Repo
+        uses: actions/checkout@v6
+        with:
+          repository: "/topcats/test-devopsgh"
+          path: "test-devopsgh"
+          clean: true
+          fetch-tags: true
+          token: ${{ steps.app-token.outputs.token }}
+
+
+      - name: Make Change
+        shell: pwsh
+        run: |
+            # Grab Input variables into powershell
+            $Workspace = '${{github.workspace}}'
+            
+            Write-Host "Main Repo"
+            Get-ChildItem -Path $Workspace
+
+            Write-Host "Test Repo"
+            Join-Path -Path $Workspace -ChildPath "test-devopsgh" | Get-ChildItem
+
+
+      - name: Did it Work
+        shell: pwsh
+        run: |
+            "> [!TIP] `n> All Done" >> $env:GITHUB_STEP_SUMMARY
