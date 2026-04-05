@@ -46,7 +46,7 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v6
         with:
-          repository: "/topcats/test-devopsgh"
+          repository: "topcats/test-devopsgh"
           path: "test-devopsgh"
           clean: true
           fetch-tags: true
